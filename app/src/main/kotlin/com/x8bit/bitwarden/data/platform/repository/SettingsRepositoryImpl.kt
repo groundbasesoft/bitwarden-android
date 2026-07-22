@@ -652,18 +652,9 @@ class SettingsRepositoryImpl(
     override fun clearUnlockPin() {
         val userId = activeUserId ?: return
         authDiskSource.apply {
-            storeEncryptedPin(
-                userId = userId,
-                encryptedPin = null,
-            )
-            authDiskSource.storePinProtectedUserKeyEnvelope(
-                userId = userId,
-                pinProtectedUserKeyEnvelope = null,
-            )
-            authDiskSource.storePinProtectedUserKey(
-                userId = userId,
-                pinProtectedUserKey = null,
-            )
+            storeEncryptedPin(userId = userId, encryptedPin = null)
+            clearPinProtectedUserKeyEnvelope(userId = userId)
+            storePinProtectedUserKey(userId = userId, pinProtectedUserKey = null)
         }
     }
 

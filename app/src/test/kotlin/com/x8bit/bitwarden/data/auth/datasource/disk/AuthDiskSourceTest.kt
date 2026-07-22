@@ -942,6 +942,34 @@ class AuthDiskSourceTest {
     }
 
     @Test
+    @Suppress("MaxLineLength")
+    fun `clearPinProtectedUserKeyEnvelope should remove the value from SharedPreferences and in-memory storage`() {
+        val pinProtectedUserKeyEnvelopeBaseKey =
+            "bwPreferencesStorage:pinKeyEncryptedUserKeyEnvelope"
+        val mockUserId = "mockUserId"
+        val mockPinProtectedUserKeyEnvelope = "mockPinProtectedUserKeyEnvelope"
+        authDiskSource.storePinProtectedUserKeyEnvelope(
+            userId = mockUserId,
+            pinProtectedUserKeyEnvelope = mockPinProtectedUserKeyEnvelope,
+        )
+        authDiskSource.storePinProtectedUserKeyEnvelope(
+            userId = mockUserId,
+            pinProtectedUserKeyEnvelope = mockPinProtectedUserKeyEnvelope,
+            inMemoryOnly = true,
+        )
+
+        authDiskSource.clearPinProtectedUserKeyEnvelope(userId = mockUserId)
+
+        assertNull(
+            fakeSharedPreferences.getString(
+                "${pinProtectedUserKeyEnvelopeBaseKey}_$mockUserId",
+                null,
+            ),
+        )
+        assertNull(authDiskSource.getPinProtectedUserKeyEnvelope(userId = mockUserId))
+    }
+
+    @Test
     fun `storePinProtectedUserKey should update result flow from getPinProtectedUserKeyFlow`() =
         runTest {
             val topSecretKey = "topsecret"

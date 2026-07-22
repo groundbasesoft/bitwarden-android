@@ -181,7 +181,7 @@ class AuthDiskSourceImpl(
         storeLastLockTimestamp(userId = userId, lastLockTimestamp = null)
         storeEncryptedPin(userId = userId, encryptedPin = null)
         storePinProtectedUserKey(userId = userId, pinProtectedUserKey = null)
-        storePinProtectedUserKeyEnvelope(userId = userId, pinProtectedUserKeyEnvelope = null)
+        clearPinProtectedUserKeyEnvelope(userId = userId)
         storeV2UpgradeToken(userId = userId, v2UpgradeToken = null)
 
         // Certain values are never removed as required by the feature requirements:
@@ -358,6 +358,14 @@ class AuthDiskSourceImpl(
                 key = PIN_PROTECTED_USER_KEY_KEY_ENVELOPE.appendIdentifier(userId),
             )
 
+    override fun getInMemoryPinProtectedUserKeyEnvelope(
+        userId: String,
+    ): String? = inMemoryPinProtectedUserKeyEnvelopes[userId]
+
+    override fun getPersistentPinProtectedUserKeyEnvelope(
+        userId: String,
+    ): String? = getString(PIN_PROTECTED_USER_KEY_KEY_ENVELOPE.appendIdentifier(userId))
+
     @Deprecated(
         "Use storePinProtectedUserKeyEnvelope instead.",
         replaceWith = ReplaceWith("storePinProtectedUserKeyEnvelope"),
@@ -381,16 +389,24 @@ class AuthDiskSourceImpl(
         pinProtectedUserKeyEnvelope: String?,
         inMemoryOnly: Boolean,
     ) {
-        inMemoryPinProtectedUserKeyEnvelopes[userId] = pinProtectedUserKeyEnvelope
         if (inMemoryOnly) {
-            getMutablePinProtectedUserKeyEnvelopeFlow(userId).tryEmit(pinProtectedUserKeyEnvelope)
-            return
+            inMemoryPinProtectedUserKeyEnvelopes[userId] = pinProtectedUserKeyEnvelope
+        } else {
+            putString(
+                key = PIN_PROTECTED_USER_KEY_KEY_ENVELOPE.appendIdentifier(identifier = userId),
+                value = pinProtectedUserKeyEnvelope,
+            )
         }
-        putString(
-            key = PIN_PROTECTED_USER_KEY_KEY_ENVELOPE.appendIdentifier(userId),
-            value = pinProtectedUserKeyEnvelope,
-        )
         getMutablePinProtectedUserKeyEnvelopeFlow(userId).tryEmit(pinProtectedUserKeyEnvelope)
+    }
+
+    override fun clearPinProtectedUserKeyEnvelope(userId: String) {
+        inMemoryPinProtectedUserKeyEnvelopes.remove(userId)
+        putString(
+            key = PIN_PROTECTED_USER_KEY_KEY_ENVELOPE.appendIdentifier(identifier = userId),
+            value = null,
+        )
+        getMutablePinProtectedUserKeyEnvelopeFlow(userId).tryEmit(null)
     }
 
     @Deprecated(

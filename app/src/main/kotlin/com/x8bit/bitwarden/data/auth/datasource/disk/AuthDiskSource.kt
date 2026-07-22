@@ -207,8 +207,25 @@ interface AuthDiskSource : AppIdProvider {
 
     /**
      * Retrieves a pin-protected user key envelope for the given [userId].
+     *
+     * This will return either the in-memory or persistent pin-protected user key, whichever is
+     * available.
      */
     fun getPinProtectedUserKeyEnvelope(userId: String): String?
+
+    /**
+     * Retrieves the in-memory pin-protected user key envelope for the given [userId].
+     *
+     * This will always ignore the persistent pin-protected user key.
+     */
+    fun getInMemoryPinProtectedUserKeyEnvelope(userId: String): String?
+
+    /**
+     * Retrieves the persistent pin-protected user key envelope for the given [userId].
+     *
+     * This will always ignore the in-memory pin-protected user key.
+     */
+    fun getPersistentPinProtectedUserKeyEnvelope(userId: String): String?
 
     /**
      * Stores a pin-protected user key for the given [userId].
@@ -237,6 +254,11 @@ interface AuthDiskSource : AppIdProvider {
         pinProtectedUserKeyEnvelope: String?,
         inMemoryOnly: Boolean = false,
     )
+
+    /**
+     * Clears the in-memory and persisted pin-protected user key envelope for the given [userId].
+     */
+    fun clearPinProtectedUserKeyEnvelope(userId: String)
 
     /**
      * Retrieves a flow for the pin-protected user key for the given [userId].

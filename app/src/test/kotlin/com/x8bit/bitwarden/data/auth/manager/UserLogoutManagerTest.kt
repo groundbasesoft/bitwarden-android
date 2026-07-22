@@ -142,7 +142,8 @@ class UserLogoutManagerTest {
         val vaultTimeoutInMinutes = 360
         val vaultTimeoutAction = VaultTimeoutAction.LOGOUT
         val pinProtectedUserKey = "pinProtectedUserKey"
-        val pinProtectedUserKeyEnvelope = "pinProtectedUserKeyEnvelope"
+        val inMemoryPinProtectedUserKeyEnvelope = "inMemoryPinProtectedUserKeyEnvelope"
+        val persistentPinProtectedUserKeyEnvelope = "persistentPinProtectedUserKeyEnvelope"
         val encryptedPin = "encryptedPin"
 
         every {
@@ -152,12 +153,23 @@ class UserLogoutManagerTest {
             settingsDiskSource.getVaultTimeoutAction(userId = userId)
         } returns vaultTimeoutAction
         every {
-            authDiskSource.getPinProtectedUserKeyEnvelope(userId = userId)
-        } returns pinProtectedUserKeyEnvelope
+            authDiskSource.getInMemoryPinProtectedUserKeyEnvelope(userId = userId)
+        } returns inMemoryPinProtectedUserKeyEnvelope
+        every {
+            authDiskSource.getPersistentPinProtectedUserKeyEnvelope(userId = userId)
+        } returns persistentPinProtectedUserKeyEnvelope
         every {
             authDiskSource.storePinProtectedUserKeyEnvelope(
                 userId = userId,
-                pinProtectedUserKeyEnvelope = pinProtectedUserKeyEnvelope,
+                pinProtectedUserKeyEnvelope = inMemoryPinProtectedUserKeyEnvelope,
+                inMemoryOnly = true,
+            )
+        } just runs
+        every {
+            authDiskSource.storePinProtectedUserKeyEnvelope(
+                userId = userId,
+                pinProtectedUserKeyEnvelope = persistentPinProtectedUserKeyEnvelope,
+                inMemoryOnly = false,
             )
         } just runs
         every { authDiskSource.getPinProtectedUserKey(userId = userId) } returns pinProtectedUserKey
@@ -195,7 +207,13 @@ class UserLogoutManagerTest {
             )
             authDiskSource.storePinProtectedUserKeyEnvelope(
                 userId = userId,
-                pinProtectedUserKeyEnvelope = pinProtectedUserKeyEnvelope,
+                pinProtectedUserKeyEnvelope = inMemoryPinProtectedUserKeyEnvelope,
+                inMemoryOnly = true,
+            )
+            authDiskSource.storePinProtectedUserKeyEnvelope(
+                userId = userId,
+                pinProtectedUserKeyEnvelope = persistentPinProtectedUserKeyEnvelope,
+                inMemoryOnly = false,
             )
             authDiskSource.storePinProtectedUserKey(
                 userId = userId,
@@ -211,7 +229,8 @@ class UserLogoutManagerTest {
         val vaultTimeoutInMinutes = 360
         val vaultTimeoutAction = VaultTimeoutAction.LOGOUT
         val pinProtectedUserKey = "pinProtectedUserKey"
-        val pinProtectedUserKeyEnvelope = "pinProtectedUserKeyEnvelope"
+        val inMemoryPinProtectedUserKeyEnvelope = "inMemoryPinProtectedUserKeyEnvelope"
+        val persistentPinProtectedUserKeyEnvelope = "persistentPinProtectedUserKeyEnvelope"
         val encryptedPin = "encryptedPin"
 
         every {
@@ -221,12 +240,23 @@ class UserLogoutManagerTest {
             settingsDiskSource.getVaultTimeoutAction(userId = userId)
         } returns vaultTimeoutAction
         every {
-            authDiskSource.getPinProtectedUserKeyEnvelope(userId = userId)
-        } returns pinProtectedUserKeyEnvelope
+            authDiskSource.getInMemoryPinProtectedUserKeyEnvelope(userId = userId)
+        } returns inMemoryPinProtectedUserKeyEnvelope
+        every {
+            authDiskSource.getPersistentPinProtectedUserKeyEnvelope(userId = userId)
+        } returns persistentPinProtectedUserKeyEnvelope
         every {
             authDiskSource.storePinProtectedUserKeyEnvelope(
                 userId = userId,
-                pinProtectedUserKeyEnvelope = pinProtectedUserKeyEnvelope,
+                pinProtectedUserKeyEnvelope = inMemoryPinProtectedUserKeyEnvelope,
+                inMemoryOnly = true,
+            )
+        } just runs
+        every {
+            authDiskSource.storePinProtectedUserKeyEnvelope(
+                userId = userId,
+                pinProtectedUserKeyEnvelope = persistentPinProtectedUserKeyEnvelope,
+                inMemoryOnly = false,
             )
         } just runs
         every { authDiskSource.getPinProtectedUserKey(userId = userId) } returns pinProtectedUserKey
@@ -254,7 +284,13 @@ class UserLogoutManagerTest {
             )
             authDiskSource.storePinProtectedUserKeyEnvelope(
                 userId = userId,
-                pinProtectedUserKeyEnvelope = pinProtectedUserKeyEnvelope,
+                pinProtectedUserKeyEnvelope = inMemoryPinProtectedUserKeyEnvelope,
+                inMemoryOnly = true,
+            )
+            authDiskSource.storePinProtectedUserKeyEnvelope(
+                userId = userId,
+                pinProtectedUserKeyEnvelope = persistentPinProtectedUserKeyEnvelope,
+                inMemoryOnly = false,
             )
             authDiskSource.storePinProtectedUserKey(
                 userId = userId,

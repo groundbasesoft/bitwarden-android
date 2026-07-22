@@ -43,7 +43,7 @@ internal class SdkStateBridge(
     }
 
     override suspend fun getPersistentPinEnvelope(): PasswordProtectedKeyEnvelope? =
-        authDiskSource.getPinProtectedUserKeyEnvelope(userId = userId)
+        authDiskSource.getPersistentPinProtectedUserKeyEnvelope(userId = userId)
 
     override suspend fun clearPersistentPinEnvelope() {
         authDiskSource.storePinProtectedUserKeyEnvelope(
@@ -62,7 +62,7 @@ internal class SdkStateBridge(
     }
 
     override suspend fun getEphemeralPinEnvelope(): PasswordProtectedKeyEnvelope? =
-        authDiskSource.getPinProtectedUserKeyEnvelope(userId = userId)
+        authDiskSource.getInMemoryPinProtectedUserKeyEnvelope(userId = userId)
 
     override suspend fun clearEphemeralPinEnvelope() {
         authDiskSource.storePinProtectedUserKeyEnvelope(

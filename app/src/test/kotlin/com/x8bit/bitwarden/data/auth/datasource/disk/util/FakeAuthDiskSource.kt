@@ -67,7 +67,8 @@ class FakeAuthDiskSource : AuthDiskSource {
     private val storedAccountCryptographicState =
         mutableMapOf<String, WrappedAccountCryptographicState?>()
     private val storedV2UpgradeTokens = mutableMapOf<String, V2UpgradeTokenJson?>()
-    private val storedPinProtectedUserKeyEnvelopes = mutableMapOf<String, Pair<String?, Boolean>>()
+    private val storedInMemoryPinProtectedUserKeyEnvelopes = mutableMapOf<String, String?>()
+    private val storedPersistentPinProtectedUserKeyEnvelopes = mutableMapOf<String, String?>()
     private val mutablePinProtectedUserKeyEnvelopesFlowMap =
         mutableMapOf<String, MutableSharedFlow<String?>>()
 
@@ -92,7 +93,8 @@ class FakeAuthDiskSource : AuthDiskSource {
         storedBiometricInitVectors.remove(userId)
         storedBiometricKeys.remove(userId)
         storedOrganizationKeys.remove(userId)
-        storedPinProtectedUserKeyEnvelopes.remove(userId)
+        storedInMemoryPinProtectedUserKeyEnvelopes.remove(userId)
+        storedPersistentPinProtectedUserKeyEnvelopes.remove(userId)
         storedEncryptedPins.remove(userId)
         storedPinProtectedUserKeys.remove(userId)
         storedV2UpgradeTokens.remove(userId)
@@ -102,12 +104,6 @@ class FakeAuthDiskSource : AuthDiskSource {
         mutablePoliciesFlowMap.remove(userId)
         mutableAccountTokensFlowMap.remove(userId)
         mutablePinProtectedUserKeyEnvelopesFlowMap.remove(userId)
-    }
-
-    private fun getMutablePinProtectedUserKeyEnvelopeFlow(
-        userId: String,
-    ): MutableSharedFlow<String?> = mutablePinProtectedUserKeyEnvelopesFlowMap.getOrPut(userId) {
-        bufferedMutableSharedFlow(replay = 1)
     }
 
     override fun getShouldUseKeyConnectorFlow(
@@ -358,15 +354,33 @@ class FakeAuthDiskSource : AuthDiskSource {
     }
 
     override fun getPinProtectedUserKeyEnvelope(userId: String): String? =
-        storedPinProtectedUserKeyEnvelopes[userId]?.first
+        storedInMemoryPinProtectedUserKeyEnvelopes[userId]
+            ?: storedPersistentPinProtectedUserKeyEnvelopes[userId]
+
+    override fun getInMemoryPinProtectedUserKeyEnvelope(
+        userId: String,
+    ): String? = storedInMemoryPinProtectedUserKeyEnvelopes[userId]
+
+    override fun getPersistentPinProtectedUserKeyEnvelope(
+        userId: String,
+    ): String? = storedPersistentPinProtectedUserKeyEnvelopes[userId]
 
     override fun storePinProtectedUserKeyEnvelope(
         userId: String,
         pinProtectedUserKeyEnvelope: String?,
         inMemoryOnly: Boolean,
     ) {
-        storedPinProtectedUserKeyEnvelopes[userId] = pinProtectedUserKeyEnvelope to inMemoryOnly
+        if (inMemoryOnly) {
+            storedInMemoryPinProtectedUserKeyEnvelopes[userId] = pinProtectedUserKeyEnvelope
+        } else {
+            storedPersistentPinProtectedUserKeyEnvelopes[userId] = pinProtectedUserKeyEnvelope
+        }
         getMutablePinProtectedUserKeyEnvelopeFlow(userId).tryEmit(pinProtectedUserKeyEnvelope)
+    }
+
+    override fun clearPinProtectedUserKeyEnvelope(userId: String) {
+        storedInMemoryPinProtectedUserKeyEnvelopes.remove(userId)
+        storedPersistentPinProtectedUserKeyEnvelopes.remove(userId)
     }
 
     override fun getPinProtectedUserKeyEnvelopeFlow(userId: String): Flow<String?> =
@@ -475,8 +489,12 @@ class FakeAuthDiskSource : AuthDiskSource {
         inMemoryOnly: Boolean = false,
     ) {
         assertEquals(
-            pinProtectedUserKeyEnvelope to inMemoryOnly,
-            storedPinProtectedUserKeyEnvelopes[userId],
+            pinProtectedUserKeyEnvelope,
+            if (inMemoryOnly) {
+                storedInMemoryPinProtectedUserKeyEnvelopes[userId]
+            } else {
+                storedPersistentPinProtectedUserKeyEnvelopes[userId]
+            },
         )
     }
 
@@ -604,5 +622,10 @@ class FakeAuthDiskSource : AuthDiskSource {
         bufferedMutableSharedFlow(replay = 1)
     }
 
+    private fun getMutablePinProtectedUserKeyEnvelopeFlow(
+        userId: String,
+    ): MutableSharedFlow<String?> = mutablePinProtectedUserKeyEnvelopesFlowMap.getOrPut(userId) {
+        bufferedMutableSharedFlow(replay = 1)
+    }
     //endregion Private helper functions
 }
